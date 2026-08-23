@@ -13,6 +13,7 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+        multiDexEnabled = true
     }
 
     buildTypes {
@@ -46,6 +47,7 @@ dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
+    implementation("androidx.multidex:multidex:2.0.1")
 
     // Media3 ExoPlayer
     implementation("androidx.media3:media3-exoplayer:1.2.1")
