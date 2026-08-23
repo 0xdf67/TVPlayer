@@ -8,7 +8,7 @@
         <item name="colorAccent">@color/accent_orange</item>
     </style>
 
-    <style name="Theme.TVPlayer.NoActionBar">
+    <style name="Theme.TVPlayer.NoActionBar" parent="Theme.TVPlayer">
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowContentOverlay">@null</item>
     </style>

@@ -52,6 +52,23 @@ Os designs de referência encontram-se nos ficheiros SVG na raiz do repositório
 
 A aplicação replica os elementos visuais principais: paleta escura com acento laranja (#F97316), tipografia clara, badges dos canais, barra de progresso e overlays.
 
+## Build no Android Studio
+
+1. Clonar o repositório e abrir a pasta de projeto no Android Studio.
+2. Aguardar pela sincronização do Gradle (requer ligação à Internet para descarregar dependências).
+3. Se solicitado, instalar o **Android SDK 34**, **Build Tools 34.0.0** e **NDK** (se aplicável).
+4. Ligar um dispositivo Android TV / emulador ou configurar um AVD com perfil de TV (API 21+).
+5. Selecionar `Build > Build Bundle(s) / APK(s) > Build APK(s)`.
+
+Configuração do projeto:
+
+- **AGP**: 8.2.2
+- **Gradle**: 8.4
+- **Kotlin**: 1.9.22
+- **compileSdk**: 34
+- **minSdk**: 21
+- **targetSdk**: 34
+
 ## Requisitos
 
 - Android 5.0+ (API 21)
