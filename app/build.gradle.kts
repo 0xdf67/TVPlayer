@@ -44,7 +44,7 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.6.1")
 
     // Android TV / Leanback
-    implementation("androidx.leanback:leanback:1.2.0")
+    implementation("androidx.leanback:leanback:1.1.0")
 
     // Media3 ExoPlayer
     implementation("androidx.media3:media3-exoplayer:1.2.1")
