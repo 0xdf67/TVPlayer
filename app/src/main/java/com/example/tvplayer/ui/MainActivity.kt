@@ -73,7 +73,7 @@ class MainActivity : AppCompatActivity() {
     private fun calculateSpanCount(): Int {
         val displayMetrics = resources.displayMetrics
         val dpWidth = displayMetrics.widthPixels / displayMetrics.density
-        return (dpWidth / 320).coerceAtLeast(2)
+        return (dpWidth / 320f).coerceAtLeast(2f).toInt()
     }
 
     private fun setupInput() {
