@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TVPlayer</string>
+    <string name="enter_m3u_url">Introduza o link M3U</string>
+    <string name="load_playlist">Carregar playlist</string>
+    <string name="channels">Canais</string>
+    <string name="tv_guide">TV Guide</string>
+    <string name="now">Agora</string>
+    <string name="live">DIRETO</string>
+    <string name="channel_number">Canal %1$d</string>
+    <string name="no_channels">Nenhum canal disponível</string>
+    <string name="error_loading">Erro ao carregar playlist</string>
+    <string name="invalid_url">URL inválida</string>
+    <string name="loading">A carregar…</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancelar</string>
+    <string name="subtitle">Legendas</string>
+    <string name="audio">Áudio</string>
+    <string name="aspect_ratio">Rácio</string>
+    <string name="settings">Definições</string>
+</resources>
