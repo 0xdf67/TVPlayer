@@ -62,9 +62,9 @@ A aplicação replica os elementos visuais principais: paleta escura com acento 
 
 Configuração do projeto:
 
-- **AGP**: 8.2.2
-- **Gradle**: 8.4
-- **Kotlin**: 1.9.22
+- **AGP**: 8.2.0
+- **Gradle**: 8.2
+- **Kotlin**: 1.9.0
 - **compileSdk**: 34
 - **minSdk**: 21
 - **targetSdk**: 34
