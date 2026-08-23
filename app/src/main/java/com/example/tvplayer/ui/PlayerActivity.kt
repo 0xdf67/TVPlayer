@@ -186,7 +186,9 @@ class PlayerActivity : AppCompatActivity() {
             val current = System.currentTimeMillis() - program.startTime
             val progress = (current.toFloat() / total).coerceIn(0f, 1f)
             val params = progressFill.layoutParams as FrameLayout.LayoutParams
-            params.width = (progressFill.parent.width * progress).toInt()
+            val parent = progressFill.parent as? View
+            val parentWidth = parent?.measuredWidth ?: 0
+            params.width = (parentWidth * progress).toInt()
             progressFill.layoutParams = params
         }
     }
@@ -273,7 +275,7 @@ class PlayerActivity : AppCompatActivity() {
                 return true
             }
             KeyEvent.KEYCODE_BACK -> {
-                if (playerView.isControllerVisible) {
+                if (playerView.isControllerFullyVisible) {
                     hideControls()
                     return true
                 }
