@@ -17,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.tvplayer.R
 import com.example.tvplayer.TvPlayerApplication
+import com.example.tvplayer.data.Channel
 import com.example.tvplayer.data.EpgRepository
 import com.example.tvplayer.data.PlaylistRepository
 import kotlinx.coroutines.launch
@@ -175,6 +176,21 @@ class MainActivity : AppCompatActivity() {
                 url.startsWith("https://", ignoreCase = true)
     }
 
+    private fun mergeChannelLogos(
+        channels: List<Channel>,
+        epgIcons: Map<String, String?>
+    ): List<Channel> {
+        return channels.map { channel ->
+            val key = channel.epgId ?: channel.name
+            val epgIcon = epgIcons[key]
+            if (!epgIcon.isNullOrEmpty() && channel.logoUrl.isNullOrEmpty()) {
+                channel.copy(logoUrl = epgIcon)
+            } else {
+                channel
+            }
+        }
+    }
+
     private fun loadPlaylistAndEpg(m3uUrl: String, epgUrl: String) {
         showLoading(true)
         lifecycleScope.launch {
@@ -194,6 +210,7 @@ class MainActivity : AppCompatActivity() {
                     epgRepository.generateSampleEpg(channels)
                 }
                 TvPlayerApplication.instance.epgData = epgData
+                TvPlayerApplication.instance.currentChannels = mergeChannelLogos(channels, epgData.channelIcons)
 
                 saveConfiguration(m3uUrl, epgUrl)
                 showLoading(false)

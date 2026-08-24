@@ -105,8 +105,18 @@ class EpgActivity : AppCompatActivity() {
         dateSelectorContainer.setOnClickListener { showDatePicker() }
     }
 
+    private fun adjustRowHeightForFiveChannels() {
+        rvEpg.post {
+            val recyclerHeight = rvEpg.height
+            if (recyclerHeight > 0) {
+                val rowHeight = recyclerHeight / 5
+                epgAdapter.setRowHeight(rowHeight)
+            }
+        }
+    }
+
     private fun showDatePicker() {
-        val allPrograms = TvPlayerApplication.instance.epgData.values.flatten()
+        val allPrograms = TvPlayerApplication.instance.epgData.programs.values.flatten()
         val dates = allPrograms.map { getDayKey(it.startTime) }.distinct().sorted()
         if (dates.size <= 1) return
 
@@ -167,11 +177,12 @@ class EpgActivity : AppCompatActivity() {
         val epgData = TvPlayerApplication.instance.epgData
 
         val items = channels.map { channel ->
-            val allPrograms = epgData[channel.epgId ?: channel.name] ?: emptyList()
+            val allPrograms = epgData.programs[channel.epgId ?: channel.name] ?: emptyList()
             channel to filterProgramsByDay(allPrograms).sortedBy { it.startTime }
         }
         epgAdapter.setWindow(windowStart, windowEnd)
         epgAdapter.submitList(items)
+        adjustRowHeightForFiveChannels()
         populateTimeline()
         updateDateSelectorLabel()
 
