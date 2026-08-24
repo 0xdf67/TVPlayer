@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/epg_channel_red" />
+    <corners android:radius="@dimen/channel_badge_radius" />
+</shape>

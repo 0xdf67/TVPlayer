@@ -34,4 +34,7 @@
     <string name="setup_error_no_channels">Não foram encontrados canais na playlist</string>
     <string name="setup_clear">Mudar playlist</string>
     <string name="setup_clear_message">Pretendes apagar a configuração atual e configurar uma nova playlist?</string>
+    <string name="today">Hoje</string>
+    <string name="featured_live">DIRETO</string>
+    <string name="no_epg_data">Sem dados de programação</string>
 </resources>
