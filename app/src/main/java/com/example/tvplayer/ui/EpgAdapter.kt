@@ -19,13 +19,23 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 class EpgAdapter(
-    private val windowStart: Long,
-    private val windowEnd: Long,
     private val onProgramClick: (Channel, EpgProgram) -> Unit
 ) : ListAdapter<Pair<Channel, List<EpgProgram>>, EpgAdapter.EpgViewHolder>(EpgDiffCallback()) {
 
     private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-    private val windowDuration = (windowEnd - windowStart).coerceAtLeast(1)
+    var windowStart: Long = 0L
+        private set
+    var windowEnd: Long = 0L
+        private set
+
+    private val windowDuration: Long
+        get() = (windowEnd - windowStart).coerceAtLeast(1)
+
+    fun setWindow(start: Long, end: Long) {
+        windowStart = start
+        windowEnd = end
+        notifyDataSetChanged()
+    }
 
     private val channelBackgrounds = listOf(
         R.drawable.bg_channel_blue,

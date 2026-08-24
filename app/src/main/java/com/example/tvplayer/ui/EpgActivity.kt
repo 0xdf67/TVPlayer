@@ -19,6 +19,7 @@ import com.example.tvplayer.TvPlayerApplication
 import com.example.tvplayer.data.Channel
 import com.example.tvplayer.data.EpgProgram
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
 
 class EpgActivity : AppCompatActivity() {
@@ -31,15 +32,38 @@ class EpgActivity : AppCompatActivity() {
     private lateinit var tvFeaturedDesc: TextView
     private lateinit var featuredProgress: ProgressBar
     private lateinit var timelineContainer: LinearLayout
+    private lateinit var dateSelectorContainer: LinearLayout
+    private lateinit var tvDateSelector: TextView
 
     private lateinit var epgAdapter: EpgAdapter
     private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+    private val dateFormat = SimpleDateFormat("EEE, dd MMM", Locale.getDefault())
+    private val dateLabelFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+
+    private var selectedDate: Calendar = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }
 
     private val windowStart: Long
         get() {
             val hour = 60 * 60 * 1000L
             val now = System.currentTimeMillis()
-            return (now / hour) * hour
+            val todayStart = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }.timeInMillis
+
+            val selectedStart = selectedDate.timeInMillis
+            return if (selectedStart == todayStart) {
+                (now / hour) * hour
+            } else {
+                selectedStart
+            }
         }
 
     private val windowEnd: Long
@@ -51,6 +75,7 @@ class EpgActivity : AppCompatActivity() {
 
         bindViews()
         setupRecyclerView()
+        setupDateSelector()
         loadData()
     }
 
@@ -63,10 +88,12 @@ class EpgActivity : AppCompatActivity() {
         tvFeaturedDesc = findViewById(R.id.tvFeaturedDesc)
         featuredProgress = findViewById(R.id.featuredProgress)
         timelineContainer = findViewById(R.id.timelineContainer)
+        dateSelectorContainer = findViewById(R.id.dateSelectorContainer)
+        tvDateSelector = findViewById(R.id.tvDateSelector)
     }
 
     private fun setupRecyclerView() {
-        epgAdapter = EpgAdapter(windowStart, windowEnd) { channel, _ ->
+        epgAdapter = EpgAdapter { channel, _ ->
             openPlayer(channel)
         }
         rvEpg.adapter = epgAdapter
@@ -74,23 +101,95 @@ class EpgActivity : AppCompatActivity() {
         rvEpg.setHasFixedSize(true)
     }
 
+    private fun setupDateSelector() {
+        dateSelectorContainer.setOnClickListener { showDatePicker() }
+    }
+
+    private fun showDatePicker() {
+        val allPrograms = TvPlayerApplication.instance.epgData.values.flatten()
+        val dates = allPrograms.map { getDayKey(it.startTime) }.distinct().sorted()
+        if (dates.size <= 1) return
+
+        val labels = dates.map { formatDateLabel(it) }.toTypedArray()
+        val currentKey = getDayKey(selectedDate.timeInMillis)
+        val selectedIndex = dates.indexOf(currentKey).coerceAtLeast(0)
+
+        AlertDialog.Builder(this)
+            .setTitle(R.string.today)
+            .setSingleChoiceItems(labels, selectedIndex) { dialog, which ->
+                val parts = dates[which].split("-")
+                selectedDate = Calendar.getInstance().apply {
+                    set(parts[0].toInt(), parts[1].toInt() - 1, parts[2].toInt(), 0, 0, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                updateDateSelectorLabel()
+                loadData()
+                dialog.dismiss()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun updateDateSelectorLabel() {
+        val todayKey = getDayKey(System.currentTimeMillis())
+        val selectedKey = getDayKey(selectedDate.timeInMillis)
+        tvDateSelector.text = if (selectedKey == todayKey) {
+            getString(R.string.today)
+        } else {
+            dateFormat.format(selectedDate.timeInMillis)
+        }
+    }
+
+    private fun getDayKey(timeMillis: Long): String {
+        return dateLabelFormat.format(timeMillis)
+    }
+
+    private fun formatDateLabel(dayKey: String): String {
+        val parts = dayKey.split("-")
+        val cal = Calendar.getInstance().apply {
+            set(parts[0].toInt(), parts[1].toInt() - 1, parts[2].toInt())
+        }
+        return dateFormat.format(cal.timeInMillis)
+    }
+
+    private fun isSameDay(timeMillis: Long, day: Calendar): Boolean {
+        val cal = Calendar.getInstance().apply { timeInMillis = timeMillis }
+        return cal.get(Calendar.YEAR) == day.get(Calendar.YEAR) &&
+                cal.get(Calendar.DAY_OF_YEAR) == day.get(Calendar.DAY_OF_YEAR)
+    }
+
+    private fun filterProgramsByDay(programs: List<EpgProgram>): List<EpgProgram> {
+        return programs.filter { isSameDay(it.startTime, selectedDate) }
+    }
+
     private fun loadData() {
         val channels = TvPlayerApplication.instance.currentChannels
         val epgData = TvPlayerApplication.instance.epgData
 
         val items = channels.map { channel ->
-            channel to (epgData[channel.epgId ?: channel.name] ?: emptyList())
+            val allPrograms = epgData[channel.epgId ?: channel.name] ?: emptyList()
+            channel to filterProgramsByDay(allPrograms).sortedBy { it.startTime }
         }
+        epgAdapter.setWindow(windowStart, windowEnd)
         epgAdapter.submitList(items)
         populateTimeline()
+        updateDateSelectorLabel()
 
         val now = System.currentTimeMillis()
-        val featured = items.firstOrNull { (_, programs) ->
-            programs.any { it.startTime <= now && it.endTime > now }
+        val featured = if (isSameDay(now, selectedDate)) {
+            items.firstOrNull { (_, programs) ->
+                programs.any { it.startTime <= now && it.endTime > now }
+            }
+        } else {
+            items.firstOrNull { (_, programs) -> programs.isNotEmpty() }
         }
 
         featured?.let { (channel, programs) ->
-            val program = programs.first { it.startTime <= now && it.endTime > now }
+            val program = if (isSameDay(now, selectedDate)) {
+                programs.first { it.startTime <= now && it.endTime > now }
+            } else {
+                programs.first()
+            }
             tvFeaturedChannel.text = channel.name
             tvFeaturedTitle.text = program.title
             tvFeaturedTime.text = "${timeFormat.format(program.startTime)} - ${timeFormat.format(program.endTime)}"
@@ -98,13 +197,14 @@ class EpgActivity : AppCompatActivity() {
             tvFeaturedDesc.visibility = if (program.description.isNullOrBlank()) View.GONE else View.VISIBLE
 
             val total = program.endTime - program.startTime
-            val current = now - program.startTime
+            val current = if (isSameDay(now, selectedDate)) now - program.startTime else 0L
             featuredProgress.max = total.toInt()
-            featuredProgress.progress = current.toInt()
+            featuredProgress.progress = current.toInt().coerceIn(0, featuredProgress.max)
 
-            if (!channel.logoUrl.isNullOrEmpty()) {
+            val imageUrl = program.iconUrl ?: channel.logoUrl
+            if (!imageUrl.isNullOrEmpty()) {
                 Glide.with(this)
-                    .load(channel.logoUrl)
+                    .load(imageUrl)
                     .placeholder(R.drawable.bg_control_button)
                     .into(ivFeatured)
             }

@@ -109,10 +109,15 @@
         android:paddingEnd="40dp">
 
         <LinearLayout
+            android:id="@+id/dateSelectorContainer"
             android:layout_width="96dp"
             android:layout_height="wrap_content"
+            android:background="@drawable/selector_focusable"
+            android:clickable="true"
+            android:focusable="true"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:padding="4dp">
 
             <TextView
                 android:id="@+id/tvDateSelector"
