@@ -1,0 +1,4 @@
+-keep class com.example.tvplayer.TvPlayerApplication { *; }
+-keep class com.example.tvplayer.ui.** { *; }
+-keep class androidx.appcompat.app.AppCompatActivity { *; }
+-keep class androidx.multidex.MultiDexApplication { *; }

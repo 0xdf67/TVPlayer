@@ -14,6 +14,7 @@ android {
         versionCode = 1
         versionName = "1.0"
         multiDexEnabled = true
+        multiDexKeepProguard = file("src/main/multidex-proguard-rules.pro")
     }
 
     buildTypes {
