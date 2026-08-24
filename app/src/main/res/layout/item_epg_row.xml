@@ -1,45 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/epgRow"
     android:layout_width="match_parent"
     android:layout_height="80dp"
-    android:gravity="center_vertical"
-    android:orientation="horizontal"
-    android:paddingStart="40dp"
-    android:paddingEnd="40dp">
-
-    <FrameLayout
-        android:id="@+id/channelBlock"
-        android:layout_width="96dp"
-        android:layout_height="72dp"
-        android:background="@drawable/bg_channel_blue">
-
-        <ImageView
-            android:id="@+id/ivChannelLogo"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:padding="8dp"
-            android:scaleType="fitCenter" />
-
-        <TextView
-            android:id="@+id/tvChannelNumber"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:textColor="@color/text_primary"
-            android:textSize="@dimen/text_meta"
-            android:textStyle="bold"
-            tools:text="1" />
-
-    </FrameLayout>
+    android:clipChildren="false"
+    android:clipToPadding="false">
 
     <LinearLayout
-        android:id="@+id/programContainer"
-        android:layout_width="0dp"
-        android:layout_height="72dp"
-        android:layout_marginStart="16dp"
-        android:layout_weight="1"
-        android:orientation="horizontal" />
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
-</LinearLayout>
+        <FrameLayout
+            android:id="@+id/channelBlock"
+            android:layout_width="96dp"
+            android:layout_height="72dp"
+            android:background="@drawable/bg_channel_blue"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <ImageView
+                android:id="@+id/ivChannelLogo"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="8dp"
+                android:scaleType="fitCenter" />
+
+            <TextView
+                android:id="@+id/tvChannelNumber"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/text_meta"
+                android:textStyle="bold"
+                tools:text="1" />
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/programContainer"
+            android:layout_width="0dp"
+            android:layout_height="72dp"
+            android:layout_marginStart="16dp"
+            android:layout_weight="1"
+            android:clipChildren="false"
+            android:clipToPadding="false" />
+
+    </LinearLayout>
+
+</FrameLayout>

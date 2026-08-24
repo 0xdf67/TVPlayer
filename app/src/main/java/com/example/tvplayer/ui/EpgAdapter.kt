@@ -126,11 +126,18 @@ class EpgAdapter(
 
                 cardView.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, weight).apply {
                     marginStart = if (index == 0) 0 else 8
+                    marginEnd = if (index == visiblePrograms.size - 1) 0 else 8
                 }
 
                 val isLive = System.currentTimeMillis() in program.startTime..program.endTime
-                val cardColorRes = if (isLive) R.color.epg_card_white else cardBackgroundColors[(position + index) % cardBackgroundColors.size]
-                cardView.setBackgroundColor(ContextCompat.getColor(itemView.context, cardColorRes))
+                // Remove background color override - let the drawable handle it
+                // Only set background for live cards to white
+                if (isLive) {
+                    cardView.setBackgroundColor(ContextCompat.getColor(itemView.context, R.color.epg_card_white))
+                } else {
+                    // Use transparent background to show the drawable's default color
+                    cardView.setBackgroundColor(ContextCompat.getColor(itemView.context, android.R.color.transparent))
+                }
 
                 val tvBadge: TextView = cardView.findViewById(R.id.tvBadge)
                 val tvTitle: TextView = cardView.findViewById(R.id.tvProgramTitle)

@@ -8,96 +8,104 @@
     android:orientation="vertical">
 
     <!-- Featured banner -->
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="288dp"
-        android:orientation="horizontal"
-        android:paddingStart="40dp"
-        android:paddingTop="32dp"
-        android:paddingEnd="40dp"
-        android:paddingBottom="32dp">
-
-        <FrameLayout
-            android:layout_width="362dp"
-            android:layout_height="224dp"
-            android:background="@drawable/bg_control_button">
-
-            <ImageView
-                android:id="@+id/ivFeatured"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="centerCrop" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/bg_featured_gradient" />
-
-            <ProgressBar
-                android:id="@+id/featuredProgress"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="match_parent"
-                android:layout_height="4dp"
-                android:layout_gravity="bottom"
-                android:layout_margin="16dp"
-                android:max="100"
-                android:progress="35"
-                android:progressDrawable="@drawable/bg_progress_fill"
-                android:progressTint="@color/white" />
-
-        </FrameLayout>
+        android:background="@color/background_dark">
 
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginStart="32dp"
-            android:layout_weight="1"
-            android:gravity="bottom"
-            android:orientation="vertical">
+            android:orientation="horizontal"
+            android:paddingStart="40dp"
+            android:paddingTop="32dp"
+            android:paddingEnd="40dp"
+            android:paddingBottom="32dp">
 
-            <TextView
-                android:id="@+id/tvFeaturedChannel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:textColor="@color/text_muted"
-                android:textSize="@dimen/text_body"
-                tools:text="C-SPAN 1 HD" />
+            <FrameLayout
+                android:layout_width="362dp"
+                android:layout_height="224dp"
+                android:background="@drawable/bg_control_button"
+                android:clipChildren="false"
+                android:clipToPadding="false">
 
-            <TextView
-                android:id="@+id/tvFeaturedTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:textColor="@color/text_primary"
-                android:textSize="@dimen/text_channel_name"
-                android:textStyle="bold"
-                tools:text="Live: Washington Journal" />
+                <ImageView
+                    android:id="@+id/ivFeatured"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop" />
 
-            <TextView
-                android:id="@+id/tvFeaturedTime"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:textColor="@color/text_secondary"
-                android:textSize="@dimen/text_meta"
-                tools:text="12:00 - 15:00" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_featured_gradient" />
 
-            <TextView
-                android:id="@+id/tvFeaturedDesc"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:ellipsize="end"
-                android:maxLines="3"
-                android:textColor="@color/text_secondary"
-                android:textSize="@dimen/text_body"
-                tools:text="Viewer calls are a highlight of the morning interview program..." />
+                <ProgressBar
+                    android:id="@+id/featuredProgress"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="4dp"
+                    android:layout_gravity="bottom"
+                    android:layout_margin="16dp"
+                    android:max="100"
+                    android:progress="35"
+                    android:progressDrawable="@drawable/bg_progress_fill"
+                    android:progressTint="@color/white" />
+
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="32dp"
+                android:layout_weight="1"
+                android:gravity="bottom"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvFeaturedChannel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:textColor="@color/text_muted"
+                    android:textSize="@dimen/text_body"
+                    tools:text="C-SPAN 1 HD" />
+
+                <TextView
+                    android:id="@+id/tvFeaturedTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:textColor="@color/text_primary"
+                    android:textSize="@dimen/text_channel_name"
+                    android:textStyle="bold"
+                    tools:text="Live: Washington Journal" />
+
+                <TextView
+                    android:id="@+id/tvFeaturedTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/text_meta"
+                    tools:text="12:00 - 15:00" />
+
+                <TextView
+                    android:id="@+id/tvFeaturedDesc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:ellipsize="end"
+                    android:maxLines="3"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/text_body"
+                    tools:text="Viewer calls are a highlight of the morning interview program..." />
+
+            </LinearLayout>
 
         </LinearLayout>
-
-    </LinearLayout>
-
+    </FrameLayout>
+    
     <!-- Timeline header -->
     <LinearLayout
         android:layout_width="match_parent"
@@ -146,15 +154,24 @@
 
     </LinearLayout>
 
-    <!-- EPG grid -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvEpg"
+    <!-- EPG grid container -->
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:clipChildren="false"
-        android:clipToPadding="false"
-        android:paddingTop="12dp"
-        android:paddingBottom="12dp" />
+        android:background="@color/background_dark">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvEpg"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:paddingStart="40dp"
+            android:paddingEnd="40dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp" />
+
+    </FrameLayout>
 
 </LinearLayout>

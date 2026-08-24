@@ -43,12 +43,53 @@ class MainActivity : AppCompatActivity() {
 
         val savedM3u = prefs.getString(KEY_M3U_URL, null)
         if (!savedM3u.isNullOrBlank()) {
-            openEpg()
-            finish()
-            return
+            loadSavedConfiguration(savedM3u)
+        } else {
+            btnConfigure.requestFocus()
         }
+    }
 
-        btnConfigure.requestFocus()
+    private fun loadSavedConfiguration(m3uUrl: String) {
+        showLoading(true)
+        lifecycleScope.launch {
+            try {
+                val playlistResult = playlistRepository.loadPlaylist(m3uUrl)
+                playlistResult.onSuccess { channels ->
+                    if (channels.isEmpty()) {
+                        showLoading(false)
+                        showError(getString(R.string.setup_error_no_channels))
+                        btnConfigure.isEnabled = true
+                        btnConfigure.requestFocus()
+                        return@onSuccess
+                    }
+
+                    TvPlayerApplication.instance.currentChannels = channels
+
+                    val savedEpgUrl = prefs.getString(KEY_EPG_URL, null)
+                    val epgData = if (!savedEpgUrl.isNullOrBlank()) {
+                        epgRepository.loadEpg(savedEpgUrl).getOrNull() ?: epgRepository.generateSampleEpg(channels)
+                    } else {
+                        epgRepository.generateSampleEpg(channels)
+                    }
+                    TvPlayerApplication.instance.epgData = epgData
+                    TvPlayerApplication.instance.currentChannels = mergeChannelLogos(channels, epgData.channelIcons)
+
+                    showLoading(false)
+                    openEpg()
+                    finish()
+                }.onFailure { error ->
+                    showLoading(false)
+                    showError(error.message ?: getString(R.string.error_loading))
+                    btnConfigure.isEnabled = true
+                    btnConfigure.requestFocus()
+                }
+            } catch (e: Exception) {
+                showLoading(false)
+                showError(e.message ?: getString(R.string.error_loading))
+                btnConfigure.isEnabled = true
+                btnConfigure.requestFocus()
+            }
+        }
     }
 
     private fun showSetupDialog() {
@@ -194,31 +235,42 @@ class MainActivity : AppCompatActivity() {
     private fun loadPlaylistAndEpg(m3uUrl: String, epgUrl: String) {
         showLoading(true)
         lifecycleScope.launch {
-            val playlistResult = playlistRepository.loadPlaylist(m3uUrl)
-            playlistResult.onSuccess { channels ->
-                if (channels.isEmpty()) {
+            try {
+                val playlistResult = playlistRepository.loadPlaylist(m3uUrl)
+                playlistResult.onSuccess { channels ->
+                    if (channels.isEmpty()) {
+                        showLoading(false)
+                        showError(getString(R.string.setup_error_no_channels))
+                        btnConfigure.isEnabled = true
+                        btnConfigure.requestFocus()
+                        return@onSuccess
+                    }
+
+                    TvPlayerApplication.instance.currentChannels = channels
+
+                    val epgData = if (epgUrl.isNotEmpty()) {
+                        epgRepository.loadEpg(epgUrl).getOrNull() ?: epgRepository.generateSampleEpg(channels)
+                    } else {
+                        epgRepository.generateSampleEpg(channels)
+                    }
+                    TvPlayerApplication.instance.epgData = epgData
+                    TvPlayerApplication.instance.currentChannels = mergeChannelLogos(channels, epgData.channelIcons)
+
+                    saveConfiguration(m3uUrl, epgUrl)
                     showLoading(false)
-                    showError(getString(R.string.setup_error_no_channels))
-                    return@onSuccess
+                    openEpg()
+                    finish()
+                }.onFailure { error ->
+                    showLoading(false)
+                    showError(error.message ?: getString(R.string.error_loading))
+                    btnConfigure.isEnabled = true
+                    btnConfigure.requestFocus()
                 }
-
-                TvPlayerApplication.instance.currentChannels = channels
-
-                val epgData = if (epgUrl.isNotEmpty()) {
-                    epgRepository.loadEpg(epgUrl).getOrNull() ?: epgRepository.generateSampleEpg(channels)
-                } else {
-                    epgRepository.generateSampleEpg(channels)
-                }
-                TvPlayerApplication.instance.epgData = epgData
-                TvPlayerApplication.instance.currentChannels = mergeChannelLogos(channels, epgData.channelIcons)
-
-                saveConfiguration(m3uUrl, epgUrl)
+            } catch (e: Exception) {
                 showLoading(false)
-                openEpg()
-                finish()
-            }.onFailure { error ->
-                showLoading(false)
-                showError(error.message ?: getString(R.string.error_loading))
+                showError(e.message ?: getString(R.string.error_loading))
+                btnConfigure.isEnabled = true
+                btnConfigure.requestFocus()
             }
         }
     }
@@ -237,6 +289,9 @@ class MainActivity : AppCompatActivity() {
     private fun showLoading(show: Boolean) {
         progressBar.visibility = if (show) View.VISIBLE else View.GONE
         btnConfigure.isEnabled = !show
+        if (!show) {
+            btnConfigure.requestFocus()
+        }
     }
 
     private fun showError(message: String) {

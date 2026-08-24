@@ -47,6 +47,8 @@ class EpgActivity : AppCompatActivity() {
         set(Calendar.MILLISECOND, 0)
     }
 
+    private var currentChannels: List<Pair<Channel, List<EpgProgram>>> = emptyList()
+
     private val windowStart: Long
         get() {
             val hour = 60 * 60 * 1000L
@@ -99,6 +101,14 @@ class EpgActivity : AppCompatActivity() {
         rvEpg.adapter = epgAdapter
         rvEpg.layoutManager = LinearLayoutManager(this)
         rvEpg.setHasFixedSize(true)
+        
+        // Add scroll listener to update Featured Banner when scrolling
+        rvEpg.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                updateFeaturedBannerFromVisibleChannel()
+            }
+        })
     }
 
     private fun setupDateSelector() {
@@ -182,25 +192,70 @@ class EpgActivity : AppCompatActivity() {
         }
         epgAdapter.setWindow(windowStart, windowEnd)
         epgAdapter.submitList(items)
+        currentChannels = items
         adjustRowHeightForFiveChannels()
         populateTimeline()
         updateDateSelectorLabel()
 
         val now = System.currentTimeMillis()
-        val featured = if (isSameDay(now, selectedDate)) {
+        updateFeaturedBanner(items, now)
+
+        // Post to ensure layout is complete before updating banner from visible channel
+        rvEpg.post {
+            updateFeaturedBannerFromVisibleChannel()
+            rvEpg.requestFocus()
+        }
+    }
+
+    private fun updateFeaturedBanner(items: List<Pair<Channel, List<EpgProgram>>>, currentTime: Long) {
+        val featured = if (isSameDay(currentTime, selectedDate)) {
             items.firstOrNull { (_, programs) ->
-                programs.any { it.startTime <= now && it.endTime > now }
+                programs.any { it.startTime <= currentTime && it.endTime > currentTime }
             }
         } else {
             items.firstOrNull { (_, programs) -> programs.isNotEmpty() }
         }
 
         featured?.let { (channel, programs) ->
-            val program = if (isSameDay(now, selectedDate)) {
-                programs.first { it.startTime <= now && it.endTime > now }
+            val program = if (isSameDay(currentTime, selectedDate)) {
+                programs.first { it.startTime <= currentTime && it.endTime > currentTime }
             } else {
                 programs.first()
             }
+            tvFeaturedChannel.text = channel.name
+            tvFeaturedTitle.text = program.title
+            tvFeaturedTime.text = "${timeFormat.format(program.startTime)} - ${timeFormat.format(program.endTime)}"
+            tvFeaturedDesc.text = program.description ?: ""
+            tvFeaturedDesc.visibility = if (program.description.isNullOrBlank()) View.GONE else View.VISIBLE
+
+            val total = program.endTime - program.startTime
+            val current = if (isSameDay(currentTime, selectedDate)) currentTime - program.startTime else 0L
+            featuredProgress.max = total.toInt()
+            featuredProgress.progress = current.toInt().coerceIn(0, featuredProgress.max)
+
+            // Use program iconUrl first, fallback to channel logoUrl from XMLTV data
+            val imageUrl = program.iconUrl ?: channel.logoUrl
+            if (!imageUrl.isNullOrEmpty()) {
+                Glide.with(this)
+                    .load(imageUrl)
+                    .placeholder(R.drawable.bg_control_button)
+                    .into(ivFeatured)
+            }
+        }
+    }
+
+    private fun updateFeaturedBannerFromVisibleChannel() {
+        val layoutManager = rvEpg.layoutManager as? LinearLayoutManager ?: return
+        val firstVisiblePosition = layoutManager.findFirstVisibleItemPosition()
+        
+        if (firstVisiblePosition >= 0 && firstVisiblePosition < currentChannels.size) {
+            val (channel, programs) = currentChannels[firstVisiblePosition]
+            val now = System.currentTimeMillis()
+            
+            val program = programs.firstOrNull { 
+                it.startTime <= now && it.endTime > now 
+            } ?: programs.firstOrNull() ?: return
+            
             tvFeaturedChannel.text = channel.name
             tvFeaturedTitle.text = program.title
             tvFeaturedTime.text = "${timeFormat.format(program.startTime)} - ${timeFormat.format(program.endTime)}"
@@ -212,6 +267,7 @@ class EpgActivity : AppCompatActivity() {
             featuredProgress.max = total.toInt()
             featuredProgress.progress = current.toInt().coerceIn(0, featuredProgress.max)
 
+            // Use program iconUrl first, fallback to channel logoUrl from XMLTV data
             val imageUrl = program.iconUrl ?: channel.logoUrl
             if (!imageUrl.isNullOrEmpty()) {
                 Glide.with(this)
@@ -219,10 +275,6 @@ class EpgActivity : AppCompatActivity() {
                     .placeholder(R.drawable.bg_control_button)
                     .into(ivFeatured)
             }
-        }
-
-        rvEpg.post {
-            rvEpg.requestFocus()
         }
     }
 
