@@ -43,12 +43,43 @@ class MainActivity : AppCompatActivity() {
 
         val savedM3u = prefs.getString(KEY_M3U_URL, null)
         if (!savedM3u.isNullOrBlank()) {
-            openEpg()
-            finish()
+            loadSavedConfiguration(savedM3u)
             return
         }
 
         btnConfigure.requestFocus()
+    }
+
+    private fun loadSavedConfiguration(m3uUrl: String) {
+        showLoading(true)
+        lifecycleScope.launch {
+            val playlistResult = playlistRepository.loadPlaylist(m3uUrl)
+            playlistResult.onSuccess { channels ->
+                if (channels.isEmpty()) {
+                    showLoading(false)
+                    showError(getString(R.string.setup_error_no_channels))
+                    return@onSuccess
+                }
+
+                TvPlayerApplication.instance.currentChannels = channels
+
+                val savedEpgUrl = prefs.getString(KEY_EPG_URL, null)
+                val epgData = if (!savedEpgUrl.isNullOrBlank()) {
+                    epgRepository.loadEpg(savedEpgUrl).getOrNull() ?: epgRepository.generateSampleEpg(channels)
+                } else {
+                    epgRepository.generateSampleEpg(channels)
+                }
+                TvPlayerApplication.instance.epgData = epgData
+                TvPlayerApplication.instance.currentChannels = mergeChannelLogos(channels, epgData.channelIcons)
+
+                showLoading(false)
+                openEpg()
+                finish()
+            }.onFailure { error ->
+                showLoading(false)
+                showError(error.message ?: getString(R.string.error_loading))
+            }
+        }
     }
 
     private fun showSetupDialog() {
