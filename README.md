@@ -67,7 +67,7 @@ Configuração do projeto:
 - **Kotlin**: 1.9.0
 - **compileSdk**: 34
 - **minSdk**: 21
-- **targetSdk**: 34
+- **targetSdk**: 33
 
 ## Requisitos
 
