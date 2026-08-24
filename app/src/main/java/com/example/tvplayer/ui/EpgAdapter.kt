@@ -125,8 +125,8 @@ class EpgAdapter(
                 val weight = duration.toFloat() / windowDuration.toFloat()
 
                 cardView.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, weight).apply {
-                    marginStart = if (index == 0) 0 else 4
-                    marginEnd = if (index == visiblePrograms.size - 1) 0 else 4
+                    marginStart = if (index == 0) 0 else 8
+                    marginEnd = if (index == visiblePrograms.size - 1) 0 else 8
                 }
 
                 val isLive = System.currentTimeMillis() in program.startTime..program.endTime

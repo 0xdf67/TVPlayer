@@ -159,9 +159,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="@color/background_dark"
-        android:clipChildren="false"
-        android:clipToPadding="false">
+        android:background="@color/background_dark">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvEpg"
@@ -169,8 +167,8 @@
             android:layout_height="match_parent"
             android:clipChildren="false"
             android:clipToPadding="false"
-            android:paddingStart="0dp"
-            android:paddingEnd="0dp"
+            android:paddingStart="40dp"
+            android:paddingEnd="40dp"
             android:paddingTop="12dp"
             android:paddingBottom="12dp" />
 
