@@ -3,8 +3,11 @@ package com.example.tvplayer.ui
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -16,42 +19,57 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 class EpgAdapter(
-    private val onChannelClick: (Channel) -> Unit
+    private val windowStart: Long,
+    private val windowEnd: Long,
+    private val onProgramClick: (Channel, EpgProgram) -> Unit
 ) : ListAdapter<Pair<Channel, List<EpgProgram>>, EpgAdapter.EpgViewHolder>(EpgDiffCallback()) {
 
     private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+    private val windowDuration = (windowEnd - windowStart).coerceAtLeast(1)
+
+    private val channelBackgrounds = listOf(
+        R.drawable.bg_channel_blue,
+        R.drawable.bg_channel_indigo,
+        R.drawable.bg_channel_badge,
+        R.drawable.bg_channel_red,
+        R.drawable.bg_channel_pink
+    )
+
+    private val cardBackgroundColors = listOf(
+        R.color.epg_card_teal,
+        R.color.epg_card_red,
+        R.color.epg_card_brown,
+        R.color.epg_card_purple,
+        R.color.epg_card_dark_purple,
+        R.color.epg_card_green
+    )
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EpgViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_epg, parent, false)
+            .inflate(R.layout.item_epg_row, parent, false)
         return EpgViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: EpgViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        holder.bind(getItem(position), position)
     }
 
     inner class EpgViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val channelBlock: FrameLayout = itemView.findViewById(R.id.channelBlock)
         private val ivChannelLogo: ImageView = itemView.findViewById(R.id.ivChannelLogo)
         private val tvChannelNumber: TextView = itemView.findViewById(R.id.tvChannelNumber)
-        private val tvChannelName: TextView = itemView.findViewById(R.id.tvChannelName)
-        private val tvCurrentProgram: TextView = itemView.findViewById(R.id.tvCurrentProgram)
-        private val tvNextProgram: TextView = itemView.findViewById(R.id.tvNextProgram)
-        private val tvTimeRange: TextView = itemView.findViewById(R.id.tvTimeRange)
+        private val programContainer: LinearLayout = itemView.findViewById(R.id.programContainer)
 
-        fun bind(item: Pair<Channel, List<EpgProgram>>) {
+        fun bind(item: Pair<Channel, List<EpgProgram>>, position: Int) {
             val channel = item.first
             val programs = item.second.sortedBy { it.startTime }
-            val now = System.currentTimeMillis()
-            val current = programs.find { it.startTime <= now && it.endTime > now }
-            val next = programs.firstOrNull { it.startTime > now }
 
-            tvChannelName.text = channel.name
-            tvChannelNumber.text = channel.number.toString()
+            channelBlock.setBackgroundResource(channelBackgrounds[position % channelBackgrounds.size])
 
             if (channel.logoUrl.isNullOrEmpty()) {
                 ivChannelLogo.visibility = View.GONE
                 tvChannelNumber.visibility = View.VISIBLE
+                tvChannelNumber.text = channel.number.toString()
             } else {
                 ivChannelLogo.visibility = View.VISIBLE
                 tvChannelNumber.visibility = View.GONE
@@ -62,28 +80,52 @@ class EpgAdapter(
                     .into(ivChannelLogo)
             }
 
-            if (current != null) {
-                tvCurrentProgram.text = current.title
-                tvTimeRange.text = "${timeFormat.format(current.startTime)} - ${timeFormat.format(current.endTime)}"
-            } else {
-                tvCurrentProgram.text = itemView.context.getString(R.string.live)
-                tvTimeRange.text = timeFormat.format(now)
+            programContainer.removeAllViews()
+
+            val visiblePrograms = programs.filter { it.endTime > windowStart && it.startTime < windowEnd }
+            if (visiblePrograms.isEmpty()) {
+                val emptyView = TextView(itemView.context).apply {
+                    text = itemView.context.getString(R.string.no_epg_data)
+                    setTextColor(ContextCompat.getColor(context, R.color.text_muted))
+                    textSize = 14f
+                }
+                programContainer.addView(emptyView)
+                return
             }
 
-            tvNextProgram.text = if (next != null) {
-                "Next: ${next.title}"
-            } else {
-                ""
-            }
-            tvNextProgram.visibility = if (next != null) View.VISIBLE else View.GONE
+            visiblePrograms.forEachIndexed { index, program ->
+                val cardView = LayoutInflater.from(itemView.context)
+                    .inflate(R.layout.item_epg_program, programContainer, false)
 
-            itemView.setOnClickListener { onChannelClick(channel) }
-            itemView.setOnFocusChangeListener { _, hasFocus ->
-                itemView.animate()
-                    .scaleX(if (hasFocus) 1.02f else 1f)
-                    .scaleY(if (hasFocus) 1.02f else 1f)
-                    .setDuration(150)
-                    .start()
+                val cardStart = program.startTime.coerceAtLeast(windowStart)
+                val cardEnd = program.endTime.coerceAtMost(windowEnd)
+                val duration = (cardEnd - cardStart).coerceAtLeast(1)
+                val weight = duration.toFloat() / windowDuration.toFloat()
+
+                cardView.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, weight).apply {
+                    marginStart = if (index == 0) 0 else 8
+                }
+
+                val isLive = System.currentTimeMillis() in program.startTime..program.endTime
+                val cardColorRes = if (isLive) R.color.epg_card_white else cardBackgroundColors[(position + index) % cardBackgroundColors.size]
+                cardView.setBackgroundColor(ContextCompat.getColor(itemView.context, cardColorRes))
+
+                val tvBadge: TextView = cardView.findViewById(R.id.tvBadge)
+                val tvTitle: TextView = cardView.findViewById(R.id.tvProgramTitle)
+                val tvTime: TextView = cardView.findViewById(R.id.tvProgramTime)
+
+                tvBadge.text = if (isLive) itemView.context.getString(R.string.featured_live) else channel.name
+                tvBadge.visibility = if (tvBadge.text.isEmpty()) View.GONE else View.VISIBLE
+                tvTitle.text = program.title
+                tvTime.text = "${timeFormat.format(program.startTime)} - ${timeFormat.format(program.endTime)}"
+
+                val textColor = if (isLive) R.color.text_dark else R.color.text_primary
+                tvBadge.setTextColor(ContextCompat.getColor(itemView.context, textColor))
+                tvTitle.setTextColor(ContextCompat.getColor(itemView.context, textColor))
+
+                cardView.setOnClickListener { onProgramClick(channel, program) }
+
+                programContainer.addView(cardView)
             }
         }
     }

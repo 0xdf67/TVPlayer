@@ -9,9 +9,24 @@
     <color name="text_primary">#FFFFFFFF</color>
     <color name="text_secondary">#B3FFFFFF</color>
     <color name="text_muted">#73FFFFFF</color>
+    <color name="text_dark">#FF000000</color>
     <color name="divider">#1AFFFFFF</color>
     <color name="control_background">#1FFFFFFF</color>
     <color name="progress_track">#33FFFFFF</color>
     <color name="focused_background">#33FFFFFF</color>
     <color name="selected_background">#33F97316</color>
+    <color name="timeline_header">#0C0E14</color>
+    <color name="epg_card_white">#FFFFFFFF</color>
+    <color name="epg_card_red">#B35C2020</color>
+    <color name="epg_card_brown">#B3422822</color>
+    <color name="epg_card_purple">#B33E1E5C</color>
+    <color name="epg_card_teal">#B3164A4A</color>
+    <color name="epg_card_dark_purple">#B34A1A54</color>
+    <color name="epg_card_green">#B31A3D2B</color>
+    <color name="epg_channel_red">#7F1D1D</color>
+    <color name="epg_channel_pink">#EC4899</color>
+    <color name="epg_channel_blue_start">#2E7CFA</color>
+    <color name="epg_channel_blue_end">#1E3D8A</color>
+    <color name="epg_channel_indigo_start">#1E3D8A</color>
+    <color name="epg_channel_indigo_end">#4F46E5</color>
 </resources>
