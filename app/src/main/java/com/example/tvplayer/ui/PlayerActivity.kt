@@ -173,7 +173,7 @@ class PlayerActivity : AppCompatActivity() {
     private fun findCurrentProgram(channel: Channel): EpgProgram? {
         val epgData = TvPlayerApplication.instance.epgData
         val key = channel.epgId ?: channel.name
-        val programs = epgData[key] ?: return null
+        val programs = epgData.programs[key] ?: return null
         val now = System.currentTimeMillis()
         return programs.find { it.startTime <= now && it.endTime > now }
     }

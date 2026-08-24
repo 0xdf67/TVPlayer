@@ -27,6 +27,7 @@ class EpgAdapter(
         private set
     var windowEnd: Long = 0L
         private set
+    private var rowHeight: Int = 0
 
     private val windowDuration: Long
         get() = (windowEnd - windowStart).coerceAtLeast(1)
@@ -34,6 +35,11 @@ class EpgAdapter(
     fun setWindow(start: Long, end: Long) {
         windowStart = start
         windowEnd = end
+        notifyDataSetChanged()
+    }
+
+    fun setRowHeight(heightPx: Int) {
+        rowHeight = heightPx
         notifyDataSetChanged()
     }
 
@@ -73,6 +79,12 @@ class EpgAdapter(
         fun bind(item: Pair<Channel, List<EpgProgram>>, position: Int) {
             val channel = item.first
             val programs = item.second.sortedBy { it.startTime }
+
+            if (rowHeight > 0) {
+                itemView.layoutParams = itemView.layoutParams.apply {
+                    height = rowHeight
+                }
+            }
 
             channelBlock.setBackgroundResource(channelBackgrounds[position % channelBackgrounds.size])
 
