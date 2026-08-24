@@ -20,12 +20,16 @@
             android:paddingStart="40dp"
             android:paddingTop="32dp"
             android:paddingEnd="40dp"
-            android:paddingBottom="32dp">
+            android:paddingBottom="32dp"
+            android:clipChildren="false"
+            android:clipToPadding="false">
 
         <FrameLayout
             android:layout_width="362dp"
             android:layout_height="224dp"
-            android:background="@drawable/bg_control_button">
+            android:background="@drawable/bg_control_button"
+            android:clipChildren="false"
+            android:clipToPadding="false">
 
             <ImageView
                 android:id="@+id/ivFeatured"
