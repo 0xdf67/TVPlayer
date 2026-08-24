@@ -10,7 +10,7 @@ android {
     defaultConfig {
         applicationId = "com.example.tvplayer"
         minSdk = 21
-        targetSdk = 34
+        targetSdk = 33
         versionCode = 1
         versionName = "1.0"
         multiDexEnabled = true
