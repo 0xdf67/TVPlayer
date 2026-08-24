@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">TVPlayer</string>
     <string name="enter_m3u_url">Introduza o link M3U</string>
+    <string name="enter_xmltv_url">Link EPG/XMLTV (opcional)</string>
     <string name="load_playlist">Carregar playlist</string>
     <string name="channels">Canais</string>
     <string name="tv_guide">TV Guide</string>
@@ -11,6 +12,7 @@
     <string name="no_channels">Nenhum canal disponível</string>
     <string name="error_loading">Erro ao carregar playlist</string>
     <string name="invalid_url">URL inválida</string>
+    <string name="invalid_m3u_url">Introduza uma URL M3U válida</string>
     <string name="loading">A carregar…</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancelar</string>
@@ -18,4 +20,18 @@
     <string name="audio">Áudio</string>
     <string name="aspect_ratio">Rácio</string>
     <string name="settings">Definições</string>
+    <string name="home_welcome">Bem-vindo ao TVPlayer</string>
+    <string name="home_subtitle">Configura a tua playlist para começares</string>
+    <string name="home_configure">Configurar playlist</string>
+    <string name="setup_title">Configurar playlist</string>
+    <string name="setup_message">Introduze o link M3U e, opcionalmente, o link XMLTV.</string>
+    <string name="setup_load">Carregar e abrir TV Guide</string>
+    <string name="setup_m3u_hint">https://exemplo.com/playlist.m3u</string>
+    <string name="setup_xmltv_hint">https://exemplo.com/epg.xml</string>
+    <string name="setup_error_empty_m3u">O link M3U é obrigatório</string>
+    <string name="setup_error_invalid_m3u">O link M3U não é válido</string>
+    <string name="setup_error_invalid_xmltv">O link XMLTV não é válido</string>
+    <string name="setup_error_no_channels">Não foram encontrados canais na playlist</string>
+    <string name="setup_clear">Mudar playlist</string>
+    <string name="setup_clear_message">Pretendes apagar a configuração atual e configurar uma nova playlist?</string>
 </resources>

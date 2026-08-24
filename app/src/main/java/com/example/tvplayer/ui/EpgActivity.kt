@@ -6,6 +6,7 @@ import android.view.KeyEvent
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -105,10 +106,31 @@ class EpgActivity : AppCompatActivity() {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            finish()
-            return true
+        when (keyCode) {
+            KeyEvent.KEYCODE_BACK -> {
+                finishAffinity()
+                return true
+            }
+            KeyEvent.KEYCODE_MENU -> {
+                showResetConfigDialog()
+                return true
+            }
         }
         return super.onKeyDown(keyCode, event)
+    }
+
+    private fun showResetConfigDialog() {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.setup_clear)
+            .setMessage(R.string.setup_clear_message)
+            .setPositiveButton(R.string.ok) { _, _ ->
+                MainActivity.clearConfiguration(this)
+                val intent = Intent(this, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+                startActivity(intent)
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
     }
 }
