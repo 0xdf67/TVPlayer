@@ -1,149 +1,225 @@
 package com.example.tvplayer.ui
 
+import android.app.Dialog
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
+import android.view.LayoutInflater
 import android.view.View
+import android.view.Window
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
-import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.tvplayer.R
 import com.example.tvplayer.TvPlayerApplication
-import com.example.tvplayer.data.Channel
 import com.example.tvplayer.data.EpgRepository
 import com.example.tvplayer.data.PlaylistRepository
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var etM3uUrl: EditText
-    private lateinit var etEpgUrl: EditText
-    private lateinit var btnLoad: Button
-    private lateinit var rvChannels: RecyclerView
+    private lateinit var btnConfigure: Button
     private lateinit var progressBar: ProgressBar
-    private lateinit var tvEmpty: TextView
 
     private val playlistRepository = PlaylistRepository()
     private val epgRepository = EpgRepository()
-    private lateinit var channelAdapter: ChannelAdapter
 
-    private var currentChannels: List<Channel> = emptyList()
+    private val prefs by lazy { getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        etM3uUrl = findViewById(R.id.etM3uUrl)
-        etEpgUrl = findViewById(R.id.etEpgUrl)
-        btnLoad = findViewById(R.id.btnLoad)
-        rvChannels = findViewById(R.id.rvChannels)
+        btnConfigure = findViewById(R.id.btnConfigure)
         progressBar = findViewById(R.id.progressBar)
-        tvEmpty = findViewById(R.id.tvEmpty)
 
-        setupRecyclerView()
-        setupInput()
+        btnConfigure.setOnClickListener { showSetupDialog() }
 
-        btnLoad.setOnClickListener { loadPlaylist() }
-
-        val savedChannels = TvPlayerApplication.instance.currentChannels
-        if (savedChannels.isNotEmpty()) {
-            currentChannels = savedChannels
-            showChannels(savedChannels)
-            etM3uUrl.setText("Playlist carregada")
-        }
-    }
-
-    private fun setupRecyclerView() {
-        channelAdapter = ChannelAdapter { channel ->
-            openPlayer(channel)
-        }
-        rvChannels.adapter = channelAdapter
-        rvChannels.layoutManager = GridLayoutManager(this, calculateSpanCount())
-        rvChannels.setHasFixedSize(true)
-    }
-
-    private fun calculateSpanCount(): Int {
-        val displayMetrics = resources.displayMetrics
-        val dpWidth = displayMetrics.widthPixels / displayMetrics.density
-        return (dpWidth / 320f).coerceAtLeast(2f).toInt()
-    }
-
-    private fun setupInput() {
-        etM3uUrl.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_DONE) {
-                loadPlaylist()
-                true
-            } else {
-                false
-            }
-        }
-
-        etM3uUrl.setOnKeyListener { _, keyCode, event ->
-            if (event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
-                loadPlaylist()
-                true
-            } else {
-                false
-            }
-        }
-    }
-
-    private fun loadPlaylist() {
-        val url = etM3uUrl.text.toString().trim()
-        if (url.isEmpty()) {
-            etM3uUrl.error = getString(R.string.invalid_url)
+        val savedM3u = prefs.getString(KEY_M3U_URL, null)
+        if (!savedM3u.isNullOrBlank()) {
+            openEpg()
+            finish()
             return
         }
 
+        btnConfigure.requestFocus()
+    }
+
+    private fun showSetupDialog() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_setup, null)
+        val etM3uUrl: EditText = dialogView.findViewById(R.id.etM3uUrl)
+        val etEpgUrl: EditText = dialogView.findViewById(R.id.etEpgUrl)
+        val btnLoad: Button = dialogView.findViewById(R.id.btnLoad)
+        val btnCancel: Button = dialogView.findViewById(R.id.btnCancel)
+
+        val dialog = Dialog(this, R.style.SetupDialog).apply {
+            requestWindowFeature(Window.FEATURE_NO_TITLE)
+            setContentView(dialogView)
+            setCancelable(false)
+            setCanceledOnTouchOutside(false)
+            window?.setBackgroundDrawableResource(android.R.color.transparent)
+        }
+
+        setupEditTextNavigation(etM3uUrl, etEpgUrl, btnLoad)
+        setupEditTextNavigation(etEpgUrl, btnLoad, btnLoad, previous = etM3uUrl)
+
+        btnCancel.setOnClickListener { dialog.dismiss() }
+
+        btnLoad.setOnClickListener {
+            val m3uUrl = etM3uUrl.text.toString().trim()
+            val epgUrl = etEpgUrl.text.toString().trim()
+
+            if (!validateInputs(m3uUrl, epgUrl, etM3uUrl, etEpgUrl)) {
+                return@setOnClickListener
+            }
+
+            dialog.dismiss()
+            loadPlaylistAndEpg(m3uUrl, epgUrl)
+        }
+
+        dialog.setOnShowListener {
+            etM3uUrl.post {
+                etM3uUrl.requestFocus()
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun setupEditTextNavigation(
+        editText: EditText,
+        nextView: View,
+        doneView: View,
+        previous: View? = null
+    ) {
+        editText.setOnEditorActionListener { _, actionId, _ ->
+            when (actionId) {
+                EditorInfo.IME_ACTION_NEXT -> {
+                    nextView.requestFocus()
+                    true
+                }
+                EditorInfo.IME_ACTION_DONE -> {
+                    doneView.requestFocus()
+                    true
+                }
+                else -> false
+            }
+        }
+
+        editText.setOnKeyListener { _, keyCode, event ->
+            if (event.action == KeyEvent.ACTION_DOWN) {
+                when (keyCode) {
+                    KeyEvent.KEYCODE_DPAD_DOWN -> {
+                        nextView.requestFocus()
+                        true
+                    }
+                    KeyEvent.KEYCODE_DPAD_UP -> {
+                        if (previous != null) {
+                            previous.requestFocus()
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                    KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
+                        if (!editText.hasFocus()) {
+                            editText.requestFocus()
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                    else -> false
+                }
+            } else {
+                false
+            }
+        }
+    }
+
+    private fun validateInputs(
+        m3uUrl: String,
+        epgUrl: String,
+        etM3uUrl: EditText,
+        etEpgUrl: EditText
+    ): Boolean {
+        var valid = true
+
+        if (m3uUrl.isEmpty()) {
+            etM3uUrl.error = getString(R.string.setup_error_empty_m3u)
+            valid = false
+        } else if (!isValidUrl(m3uUrl)) {
+            etM3uUrl.error = getString(R.string.setup_error_invalid_m3u)
+            valid = false
+        } else {
+            etM3uUrl.error = null
+        }
+
+        if (epgUrl.isNotEmpty() && !isValidUrl(epgUrl)) {
+            etEpgUrl.error = getString(R.string.setup_error_invalid_xmltv)
+            valid = false
+        } else {
+            etEpgUrl.error = null
+        }
+
+        return valid
+    }
+
+    private fun isValidUrl(url: String): Boolean {
+        return url.startsWith("http://", ignoreCase = true) ||
+                url.startsWith("https://", ignoreCase = true)
+    }
+
+    private fun loadPlaylistAndEpg(m3uUrl: String, epgUrl: String) {
         showLoading(true)
         lifecycleScope.launch {
-            val result = playlistRepository.loadPlaylist(url)
-            showLoading(false)
+            val playlistResult = playlistRepository.loadPlaylist(m3uUrl)
+            playlistResult.onSuccess { channels ->
+                if (channels.isEmpty()) {
+                    showLoading(false)
+                    showError(getString(R.string.setup_error_no_channels))
+                    return@onSuccess
+                }
 
-            result.onSuccess { channels ->
-                currentChannels = channels
                 TvPlayerApplication.instance.currentChannels = channels
-                loadEpgForChannels(channels)
-                showChannels(channels)
+
+                val epgData = if (epgUrl.isNotEmpty()) {
+                    epgRepository.loadEpg(epgUrl).getOrNull() ?: epgRepository.generateSampleEpg(channels)
+                } else {
+                    epgRepository.generateSampleEpg(channels)
+                }
+                TvPlayerApplication.instance.epgData = epgData
+
+                saveConfiguration(m3uUrl, epgUrl)
+                showLoading(false)
+                openEpg()
+                finish()
             }.onFailure { error ->
+                showLoading(false)
                 showError(error.message ?: getString(R.string.error_loading))
             }
         }
     }
 
-    private fun loadEpgForChannels(channels: List<Channel>) {
-        lifecycleScope.launch {
-            val epgUrl = etEpgUrl.text.toString().trim()
-            val epgData = if (epgUrl.isNotEmpty()) {
-                epgRepository.loadEpg(epgUrl).getOrNull() ?: epgRepository.generateSampleEpg(channels)
-            } else {
-                epgRepository.generateSampleEpg(channels)
-            }
-            TvPlayerApplication.instance.epgData = epgData
-        }
+    private fun saveConfiguration(m3uUrl: String, epgUrl: String) {
+        prefs.edit()
+            .putString(KEY_M3U_URL, m3uUrl)
+            .putString(KEY_EPG_URL, epgUrl)
+            .apply()
     }
 
-    private fun showChannels(channels: List<Channel>) {
-        channelAdapter.submitList(channels)
-        tvEmpty.visibility = if (channels.isEmpty()) View.VISIBLE else View.GONE
-        if (channels.isNotEmpty()) {
-            rvChannels.post {
-                rvChannels.requestFocus()
-            }
-        }
+    private fun openEpg() {
+        startActivity(Intent(this, EpgActivity::class.java))
     }
 
     private fun showLoading(show: Boolean) {
         progressBar.visibility = if (show) View.VISIBLE else View.GONE
-        btnLoad.isEnabled = !show
+        btnConfigure.isEnabled = !show
     }
 
     private fun showError(message: String) {
@@ -154,24 +230,24 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun openPlayer(channel: Channel) {
-        val index = currentChannels.indexOfFirst { it.id == channel.id }
-        TvPlayerApplication.instance.currentChannelIndex = index
-
-        val intent = Intent(this, PlayerActivity::class.java).apply {
-            putExtra(PlayerActivity.EXTRA_CHANNELS, ArrayList(currentChannels))
-            putExtra(PlayerActivity.EXTRA_START_INDEX, index)
-        }
-        startActivity(intent)
-    }
-
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_MENU || keyCode == KeyEvent.KEYCODE_INFO) {
-            if (currentChannels.isNotEmpty()) {
-                startActivity(Intent(this, EpgActivity::class.java))
-            }
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            finishAffinity()
             return true
         }
         return super.onKeyDown(keyCode, event)
+    }
+
+    companion object {
+        private const val PREFS_NAME = "tvplayer_setup"
+        private const val KEY_M3U_URL = "m3u_url"
+        private const val KEY_EPG_URL = "epg_url"
+
+        fun clearConfiguration(context: Context) {
+            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .clear()
+                .apply()
+        }
     }
 }
