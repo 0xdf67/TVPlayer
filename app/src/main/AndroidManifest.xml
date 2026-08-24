@@ -23,7 +23,7 @@
         android:usesCleartextTraffic="true">
 
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.MainActivity"
             android:exported="true"
             android:screenOrientation="landscape"
             android:theme="@style/Theme.TVPlayer.NoActionBar">
@@ -35,14 +35,14 @@
         </activity>
 
         <activity
-            android:name=".PlayerActivity"
+            android:name=".ui.PlayerActivity"
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize"
             android:exported="false"
             android:screenOrientation="landscape"
             android:theme="@style/Theme.TVPlayer.NoActionBar" />
 
         <activity
-            android:name=".EpgActivity"
+            android:name=".ui.EpgActivity"
             android:exported="false"
             android:screenOrientation="landscape"
             android:theme="@style/Theme.TVPlayer.NoActionBar" />
