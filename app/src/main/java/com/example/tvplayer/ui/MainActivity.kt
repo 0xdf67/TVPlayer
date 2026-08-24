@@ -1,11 +1,14 @@
 package com.example.tvplayer.ui
 
+import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
+import android.view.Window
+import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
@@ -54,10 +57,16 @@ class MainActivity : AppCompatActivity() {
         val btnLoad: Button = dialogView.findViewById(R.id.btnLoad)
         val btnCancel: Button = dialogView.findViewById(R.id.btnCancel)
 
-        val dialog = AlertDialog.Builder(this, R.style.SetupDialog)
-            .setView(dialogView)
-            .setCancelable(false)
-            .create()
+        val dialog = Dialog(this, R.style.SetupDialog).apply {
+            requestWindowFeature(Window.FEATURE_NO_TITLE)
+            setContentView(dialogView)
+            setCancelable(false)
+            setCanceledOnTouchOutside(false)
+            window?.setBackgroundDrawableResource(android.R.color.transparent)
+        }
+
+        setupEditTextNavigation(etM3uUrl, etEpgUrl, btnLoad)
+        setupEditTextNavigation(etEpgUrl, btnLoad, btnLoad, previous = etM3uUrl)
 
         btnCancel.setOnClickListener { dialog.dismiss() }
 
@@ -74,10 +83,63 @@ class MainActivity : AppCompatActivity() {
         }
 
         dialog.setOnShowListener {
-            etM3uUrl.requestFocus()
+            etM3uUrl.post {
+                etM3uUrl.requestFocus()
+            }
         }
 
         dialog.show()
+    }
+
+    private fun setupEditTextNavigation(
+        editText: EditText,
+        nextView: View,
+        doneView: View,
+        previous: View? = null
+    ) {
+        editText.setOnEditorActionListener { _, actionId, _ ->
+            when (actionId) {
+                EditorInfo.IME_ACTION_NEXT -> {
+                    nextView.requestFocus()
+                    true
+                }
+                EditorInfo.IME_ACTION_DONE -> {
+                    doneView.requestFocus()
+                    true
+                }
+                else -> false
+            }
+        }
+
+        editText.setOnKeyListener { _, keyCode, event ->
+            if (event.action == KeyEvent.ACTION_DOWN) {
+                when (keyCode) {
+                    KeyEvent.KEYCODE_DPAD_DOWN -> {
+                        nextView.requestFocus()
+                        true
+                    }
+                    KeyEvent.KEYCODE_DPAD_UP -> {
+                        if (previous != null) {
+                            previous.requestFocus()
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                    KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
+                        if (!editText.hasFocus()) {
+                            editText.requestFocus()
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                    else -> false
+                }
+            } else {
+                false
+            }
+        }
     }
 
     private fun validateInputs(
