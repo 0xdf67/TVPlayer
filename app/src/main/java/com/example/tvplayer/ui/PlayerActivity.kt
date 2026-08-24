@@ -279,6 +279,10 @@ class PlayerActivity : AppCompatActivity() {
                     hideControls()
                     return true
                 }
+                // Pressionar Return/Back regressa ao EPG
+                openEpg()
+                finish()
+                return true
             }
         }
         return super.onKeyDown(keyCode, event)
