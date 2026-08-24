@@ -1,7 +1,6 @@
 package com.example.tvplayer.parser
 
 import com.example.tvplayer.data.Channel
-import java.net.URL
 
 object M3UParser {
 
@@ -63,11 +62,29 @@ object M3UParser {
     }
 
     private fun isValidUrl(url: String): Boolean {
-        return try {
-            URL(url)
-            url.startsWith("http://") || url.startsWith("https://") || url.startsWith("rtmp://") || url.startsWith("udp://")
-        } catch (e: Exception) {
-            false
-        }
+        // Accept various streaming protocols
+        val validProtocols = listOf(
+            "http://",
+            "https://",
+            "rtmp://",
+            "rtmps://",
+            "rtsp://",
+            "udp://",
+            "rtp://",
+            "mms://",
+            "mmsh://",
+            "file://"
+        )
+        
+        // Check if URL starts with a valid protocol
+        val hasValidProtocol = validProtocols.any { url.startsWith(it, ignoreCase = true) }
+        
+        // Also accept relative URLs or paths (common in local playlists)
+        val isRelativeUrl = url.startsWith("/") || url.startsWith("./") || url.startsWith("../")
+        
+        // Basic check for non-empty and not a comment
+        val isNotEmpty = url.isNotEmpty() && !url.startsWith("#")
+        
+        return (hasValidProtocol || isRelativeUrl) && isNotEmpty
     }
 }
