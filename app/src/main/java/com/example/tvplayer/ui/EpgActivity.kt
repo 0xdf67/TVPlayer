@@ -200,7 +200,9 @@ class EpgActivity : AppCompatActivity() {
         val now = System.currentTimeMillis()
         updateFeaturedBanner(items, now)
 
+        // Post to ensure layout is complete before updating banner from visible channel
         rvEpg.post {
+            updateFeaturedBannerFromVisibleChannel()
             rvEpg.requestFocus()
         }
     }
