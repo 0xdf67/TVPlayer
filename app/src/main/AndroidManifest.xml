@@ -19,6 +19,7 @@
         android:label="@string/app_name"
         android:logo="@drawable/app_banner"
         android:theme="@style/Theme.TVPlayer"
+        android:useEmbeddedDex="true"
         android:usesCleartextTraffic="true">
 
         <activity

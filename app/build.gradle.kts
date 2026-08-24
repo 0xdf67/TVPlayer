@@ -42,6 +42,12 @@ android {
     buildFeatures {
         viewBinding = false
     }
+
+    packaging {
+        dex {
+            useLegacyPackaging = false
+        }
+    }
 }
 
 dependencies {
